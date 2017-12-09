@@ -18,10 +18,10 @@ int w = 500, h = 500;
 int frame=0,time,timebase=0;
 int deltaTime = 0;
 
-
+//variables para ver la camara
 CCamera objCamera;	//Create objet Camera
 
-GLfloat g_lookupdown = 0.0f;    // Look Position In The Z-Axis (NEW)
+GLfloat g_lookupdown = 92.0f;    // Look Position In The Z-Axis (NEW)
 
 GLfloat Diffuse[]= { 0.5f, 0.5f, 0.5f, 1.0f };				// Diffuse Light Values
 GLfloat Specular[] = { 1.0, 1.0, 1.0, 1.0 };				// Specular Light Values
@@ -37,15 +37,32 @@ CTexture bisagra;
 CTexture oro;
 CTexture azul;
 CTexture naranja;
+CTexture dice;
 //variables de animacion
 bool play=false;
 bool cerrar=false;
 bool abrir=false;
+bool tiro=false;
 typedef struct _frame {
 	float angulo;
 } FRAME ;
 FRAME keyFrame [MAX_FRAMES];
 float anguloActual=180;
+//para el cubo
+float rotacionAleatoriax=0;
+float rotacionAleatoriaz=0;
+float rotacionAleatoriax2=0;
+float rotacionAleatoriaz2=0;
+float rAx=0;
+float rAz=0;
+float rAxAux=0;
+float rAzAux=0;
+float rAx2=0;
+float rAz2=0;
+float rAxAux2=0;
+float rAzAux2=0;
+
+
 //variales para las FICHAS
 int posiciones[24][5]={
 {1,1,1,1,1}
@@ -130,6 +147,10 @@ void InitGL ( GLvoid )     // Inicializamos parametros
 	naranja.LoadTGA("texturas/fichaNaranja.tga");
 	naranja.BuildGLTexture();
 	naranja.ReleaseImage();
+
+	dice.LoadTGA("texturas/dice.tga");
+	dice.BuildGLTexture();
+	dice.ReleaseImage();
 	//END NEW//////////////////////////////
 
 	keyFrame[0].angulo=0.0;
@@ -138,8 +159,22 @@ void InitGL ( GLvoid )     // Inicializamos parametros
 	//configuracion inicial del tablero
 
 
-	objCamera.Position_Camera(0,2.5f,3, 0,2.5f,0, 0, 1, 0);
+	// objCamera.Position_Camera(0,2.5f,3,
+	// 	 0,2.5f,0,
+	// 	  0, 1, 0);
+	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+      GLfloat mat_shininess[] = { 50.0 };
+      GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+      glClearColor (0.0, 0.0, 0.0, 0.0);
+      glShadeModel (GL_SMOOTH);
 
+      glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+      glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+      glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	objCamera.Position_Camera(4.229999, 31.900013, -11.579988,
+	  4.229999, 31.900013, -14.579986,
+	  0.000000, 1.000000, 0.000000);
 }
 
 
@@ -166,10 +201,13 @@ void display ( void )   // Creamos la funcion donde se dibuja
 				glEnable(GL_LIGHTING);
 				glColor3f(1.0,1.0,1.0);
 			glPopMatrix();
-
 			tableroCompleto(anguloActual,bisagra.GLindex,tapete.GLindex,oro.GLindex,triangulos.GLindex,madera.GLindex,posiciones,azul.GLindex,naranja.GLindex);
-			// glTranslatef(0,5,0);
-			// ficha(azul.GLindex,naranja.GLindex,1);
+			glPushMatrix();
+				glTranslatef(27,2,0);
+				cubo(dice.GLindex,rAx,rAz);
+				glTranslatef(0,0,4);
+				cubo(dice.GLindex,rAx2,rAz2);
+			glPopMatrix();
 		glPopMatrix();
 	glPopMatrix();
 	glutSwapBuffers ( );
@@ -180,6 +218,10 @@ void display ( void )   // Creamos la funcion donde se dibuja
 float interpolacion(float actual,float destino){
 	float aumento=0.5;
 	return ((actual-destino)/abs(actual-destino))*aumento;
+}
+
+float interpolacionCubo(float origen,float destino,float tiempo){
+	return (destino-origen)/tiempo;
 }
 
 void animacion()
@@ -194,6 +236,31 @@ void animacion()
 			anguloActual-=interpolacion(keyFrame[1].angulo,keyFrame[0].angulo);
 			if (anguloActual<0)
 				play=false;
+		}
+	}
+	if (tiro){
+		if (rAx!=rotacionAleatoriax ||rAz!=rotacionAleatoriaz  ){
+			rAx+=interpolacionCubo(rAxAux,rotacionAleatoriax,10);
+			if (rAx>360)
+				rAx-=360;
+			rAz+=interpolacionCubo(rAzAux,rotacionAleatoriaz,10);
+			if (rAz>360)
+				rAz-=360;
+		}
+		if (rAx2!=rotacionAleatoriax2 || rAz2!=rotacionAleatoriaz2  ){
+			rAx2+=interpolacionCubo(rAxAux2,rotacionAleatoriax2,10);
+			if (rAx2>360)
+				rAx2-=360;
+			rAz2+=interpolacionCubo(rAzAux2,rotacionAleatoriaz2,10);
+			if (rAz2>360)
+				rAz2-=360;
+		}
+		if ((rAx==rotacionAleatoriax  &&rAx2==rotacionAleatoriax2 )||(rAz==rotacionAleatoriaz  &&rAz2==rotacionAleatoriaz2)){
+			tiro=false;
+			rAxAux=rAx;
+			rAzAux=rAz;
+			rAxAux2=rAx2;
+			rAzAux2=rAz2;
 		}
 	}
 	glutPostRedisplay();
@@ -250,10 +317,25 @@ void keyboard ( unsigned char key, int x, int y )  // Create Keyboard Function
 			abrir=false;
 			break;
 		case 'o':
-			play=1;
+			play=true;
 			cerrar=false;
 			abrir=true;
 			break;
+		case 't'://tirar
+		case 'T':
+			tiro=true;
+			while (rAxAux==rotacionAleatoriax || rAzAux==rotacionAleatoriaz||rAxAux2==rotacionAleatoriax2 || rAzAux2==rotacionAleatoriaz2){
+				rotacionAleatoriax=((rand()%3)+1)*90;
+				rotacionAleatoriaz=((rand()%3)+1)*90;
+				rotacionAleatoriax2=((rand()%3)+1)*90;
+				rotacionAleatoriaz2=((rand()%3)+1)*90;
+			}
+			break;
+		case 'p':
+			printf("%f %f %f\n", objCamera.mPos.x,  objCamera.mPos.y,  objCamera.mPos.z);
+			printf("%f %f %f\n", 	objCamera.mView.x, objCamera.mView.y, objCamera.mView.z);
+			printf("%f %f %f\n", objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
+			printf("%f\n",g_lookupdown );
 		case 27:        // Cuando Esc es presionado...
 			exit ( 0 );   // Salimos del programa
 			break;
