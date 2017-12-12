@@ -20,12 +20,24 @@ int deltaTime = 0;
 
 //variables para ver la camara
 CCamera objCamera;	//Create objet Camera
+bool changeCamera=false;
+
+//variables de ficha dummy
+float fichaDummyx=2.83,
+	fichaDummyy=4.2,
+	fichaDummyz=0.57,
+	fichaDviewx=2.82, 	
+	fichaDviewy=6,
+	fichaDviewz=-2.43,
+	fichaDryAnterior=0,
+	fichaDry=0;
+
 
 GLfloat g_lookupdown = 92.0f;    // Look Position In The Z-Axis (NEW)
 
 GLfloat Diffuse[]= { 0.5f, 0.5f, 0.5f, 1.0f };				// Diffuse Light Values
 GLfloat Specular[] = { 1.0, 1.0, 1.0, 1.0 };				// Specular Light Values
-GLfloat Position[]= { 0.0f, 7.0f, -5.0f, 0.0f };			// Light Position
+GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
 GLfloat Position2[]= { 0.0f, 0.0f, -5.0f, 1.0f };			// Light Position
 
 //texturas
@@ -62,7 +74,6 @@ float rAz2=0;
 float rAxAux2=0;
 float rAzAux2=0;
 
-
 //variales para las FICHAS
 int posiciones[24][5]={
 {1,1,1,1,1}
@@ -93,6 +104,13 @@ int posiciones[24][5]={
 ,{0,0,0,0,0}
 ,{2,2,0,0,0}};
 
+//variables auxiliares
+float ax=4.229999;
+float ay= 31.900013;
+float az=-11.579988;
+float dir=-1;
+
+
 //figuras
 CFiguras sky;
 //variables de animacion
@@ -105,8 +123,7 @@ void InitGL ( GLvoid )     // Inicializamos parametros
 	glShadeModel (GL_SMOOTH);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-
-	glEnable ( GL_COLOR_MATERIAL );
+	light();
 
 	glClearDepth(1.0f);									// Configuramos Depth Buffer
 	glEnable(GL_DEPTH_TEST);							// Habilitamos Depth Testing
@@ -158,23 +175,16 @@ void InitGL ( GLvoid )     // Inicializamos parametros
 
 	//configuracion inicial del tablero
 
-
-	// objCamera.Position_Camera(0,2.5f,3,
-	// 	 0,2.5f,0,
-	// 	  0, 1, 0);
 	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-      GLfloat mat_shininess[] = { 50.0 };
-      GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-      glClearColor (0.0, 0.0, 0.0, 0.0);
-      glShadeModel (GL_SMOOTH);
+    GLfloat mat_shininess[] = { 50.0 };
 
-      glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-      glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-      glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glClearColor (0.0, 0.0, 0.0, 0.0);
+    glShadeModel (GL_SMOOTH);
 
-	objCamera.Position_Camera(4.229999, 31.900013, -11.579988,
-	  4.229999, 31.900013, -14.579986,
-	  0.000000, 1.000000, 0.000000);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+	;
 }
 
 
@@ -186,12 +196,35 @@ void display ( void )   // Creamos la funcion donde se dibuja
 
 
 	glPushMatrix();
+		light_position[0] = ax;
+		light_position[1] = ay;
+		light_position[2] = az;
+		light_position[3] = dir;
+		glLightfv(GL_LIGHTING, GL_POSITION, light_position);
 		glRotatef(g_lookupdown,1.0f,0,0);
 
-		gluLookAt(	objCamera.mPos.x,  objCamera.mPos.y,  objCamera.mPos.z,
-					objCamera.mView.x, objCamera.mView.y, objCamera.mView.z,
-					objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
 
+		if (!changeCamera)
+			objCamera.Position_Camera(4.229999, 31.900013, -11.579988,
+			  4.229999, 31.900013, -14.579986,
+			  0.000000, 1.000000, 0.000000);			
+		else{
+			
+			if (fichaDryAnterior<fichaDry)
+				objCamera.Position_Camera(fichaDummyx,fichaDummyy,fichaDummyz,
+					fichaDviewx,fichaDummyy,fichaDviewz,0,1,0,-CAMERASPEED);
+			else if (fichaDryAnterior>fichaDry)
+				objCamera.Position_Camera(fichaDummyx,fichaDummyy,fichaDummyz,
+					fichaDviewx,fichaDummyy,fichaDviewz,0,1,0,CAMERASPEED);
+			else
+				objCamera.Position_Camera(fichaDummyx,fichaDummyy,fichaDummyz,
+					fichaDviewx,fichaDummyy,fichaDviewz,0,1,0,0);		
+			fichaDryAnterior=fichaDry;
+		}
+				
+		gluLookAt(	objCamera.mPos.x,  objCamera.mPos.y,  objCamera.mPos.z,
+				objCamera.mView.x, objCamera.mView.y, objCamera.mView.z,
+				objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
 
 		glPushMatrix();
 			glPushMatrix(); //Creamos cielo
@@ -199,14 +232,21 @@ void display ( void )   // Creamos la funcion donde se dibuja
 				glTranslatef(0,60,0);
 				sky.skybox(130.0, 130.0, 130.0,cielo.GLindex);
 				glEnable(GL_LIGHTING);
-				glColor3f(1.0,1.0,1.0);
+				// glColor3f(1.0,1.0,1.0);
 			glPopMatrix();
-			tableroCompleto(anguloActual,bisagra.GLindex,tapete.GLindex,oro.GLindex,triangulos.GLindex,madera.GLindex,posiciones,azul.GLindex,naranja.GLindex);
 			glPushMatrix();
+				tableroCompleto(anguloActual,bisagra.GLindex,tapete.GLindex,oro.GLindex,triangulos.GLindex,madera.GLindex,posiciones,azul.GLindex,naranja.GLindex);
 				glTranslatef(27,2,0);
 				cubo(dice.GLindex,rAx,rAz);
 				glTranslatef(0,0,4);
 				cubo(dice.GLindex,rAx2,rAz2);
+			glPopMatrix();
+			glPushMatrix();
+				// glRotatef(fichaDry,0,1,0);
+				glTranslatef(fichaDummyx,fichaDummyy-2.2,fichaDummyz);
+				// glRotatef(fichaDrx,1,0,0);
+				// glRotatef(fichaDrz,0,0,1);
+				ficha(azul.GLindex);
 			glPopMatrix();
 		glPopMatrix();
 	glPopMatrix();
@@ -294,22 +334,38 @@ void keyboard ( unsigned char key, int x, int y )  // Create Keyboard Function
 
 		case 'w':   //Movimientos de camara
 		case 'W':
-			objCamera.Move_Camera( CAMERASPEED+0.2 );
+			if (changeCamera){
+				objCamera.Move_Camera( CAMERASPEED+0.2 );
+				fichaDummyz-=0.8073046875;
+				fichaDviewz-=0.8073046875;
+			}
 			break;
 
 		case 's':
 		case 'S':
-			objCamera.Move_Camera(-(CAMERASPEED+0.2));
+			if (changeCamera){
+				objCamera.Move_Camera(-(CAMERASPEED+0.2));
+				fichaDummyz+=0.8073046875;
+				fichaDviewz+=0.8073046875;	
+			}
 			break;
 
 		case 'a':
 		case 'A':
-			objCamera.Strafe_Camera(-(CAMERASPEED+0.4));
+			if (changeCamera){
+				objCamera.Strafe_Camera(-(CAMERASPEED+0.4));
+				fichaDummyx-=0.8073046875;
+				fichaDviewx-=0.8073046875;
+			}
 			break;
 
 		case 'd':
 		case 'D':
-			objCamera.Strafe_Camera( CAMERASPEED+0.4 );
+			if (changeCamera){
+				objCamera.Strafe_Camera( CAMERASPEED+0.4 );
+				fichaDummyx+=0.8073046875;
+				fichaDviewx+=0.8073046875;
+			}
 			break;
 		case 'c':
 			play=true;
@@ -321,7 +377,7 @@ void keyboard ( unsigned char key, int x, int y )  // Create Keyboard Function
 			cerrar=false;
 			abrir=true;
 			break;
-		case 't'://tirar
+		case 't'://tirar	
 		case 'T':
 			tiro=true;
 			while (rAxAux==rotacionAleatoriax || rAzAux==rotacionAleatoriaz||rAxAux2==rotacionAleatoriax2 || rAzAux2==rotacionAleatoriaz2){
@@ -331,11 +387,56 @@ void keyboard ( unsigned char key, int x, int y )  // Create Keyboard Function
 				rotacionAleatoriaz2=((rand()%3)+1)*90;
 			}
 			break;
+		case 'l':
+		case 'L':
+			changeCamera=!changeCamera;
+			if (changeCamera){
+				//poner la camara en movimiento usando la ficha dummy
+				g_lookupdown=12;
+				objCamera.Position_Camera(fichaDummyx,fichaDummyy,fichaDummyz,
+				fichaDviewx,fichaDummyy,fichaDviewz,0,1,0);
+			}
+			else{
+				fichaDviewx=objCamera.mView.x;
+				fichaDviewy=objCamera.mView.y;
+				fichaDviewz=objCamera.mView.z;
+				fichaDviewx=objCamera.mView.x;
+				fichaDviewy=objCamera.mView.y;
+				fichaDviewz=objCamera.mView.z;
+				g_lookupdown=92;
+			}
+			break;
 		case 'p':
-			printf("%f %f %f\n", objCamera.mPos.x,  objCamera.mPos.y,  objCamera.mPos.z);
-			printf("%f %f %f\n", 	objCamera.mView.x, objCamera.mView.y, objCamera.mView.z);
-			printf("%f %f %f\n", objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
-			printf("%f\n",g_lookupdown );
+			// printf("%f %f %f\n", objCamera.mPos.x,  objCamera.mPos.y,  objCamera.mPos.z);
+			// printf("%f %f %f\n", 	objCamera.mView.x, objCamera.mView.y, objCamera.mView.z);
+			// printf("%f %f %f\n", objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
+			printf("%f\n",fichaDry );
+			break;
+		case 'b':
+			ax+=0.1;
+			break;
+		case 'B':
+			ax-=0.1;
+			break;
+		case 'n':
+			ay+=0.1;
+			break;
+		case 'N':
+			ay-=0.1;
+			break;
+		case 'm':
+			az+=0.1;
+			break;
+		case 'M':
+			az-=0.1;
+			break;
+		// case 'l':
+		// 	dir-=0.5;
+		// 	break;
+		// case 'L':
+		// 	dir+=0.5;
+		// 	break;
+
 		case 27:        // Cuando Esc es presionado...
 			exit ( 0 );   // Salimos del programa
 			break;
@@ -350,27 +451,39 @@ void arrow_keys ( int a_keys, int x, int y )  // Funcion para manejo de teclas e
 {
   switch ( a_keys ) {
 	case GLUT_KEY_PAGE_UP:
-		objCamera.UpDown_Camera(CAMERASPEED);
+		if (changeCamera){
+			objCamera.UpDown_Camera(CAMERASPEED);
+			fichaDummyy+=10;}
 		break;
 
 	case GLUT_KEY_PAGE_DOWN:
-		objCamera.UpDown_Camera(-CAMERASPEED);
+		if (changeCamera){
+			objCamera.UpDown_Camera(-CAMERASPEED);
+			fichaDummyy-=10;}
 		break;
 
     case GLUT_KEY_UP:     // Presionamos tecla ARRIBA...
-		g_lookupdown -= 1.0f;
+    	if (changeCamera)
+    		g_lookupdown -= 1.0f;
 		break;
 
     case GLUT_KEY_DOWN:               // Presionamos tecla ABAJO...
-		g_lookupdown += 1.0f;
+		if (changeCamera)
+			g_lookupdown += 1.0f;
 		break;
 
 	case GLUT_KEY_LEFT:
-		objCamera.Rotate_View(-CAMERASPEED);
+		// if (changeCamera){
+			// objCamera.Rotate_View(-CAMERASPEED);
+			fichaDry+=4;
+		// }
 		break;
 
 	case GLUT_KEY_RIGHT:
-		objCamera.Rotate_View( CAMERASPEED);
+		// if (changeCamera){
+			// objCamera.Rotate_View( CAMERASPEED);
+			fichaDry-=4;
+		// }
 		break;
 
     default:

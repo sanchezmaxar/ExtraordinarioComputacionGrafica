@@ -14,6 +14,18 @@ void CCamera::Position_Camera(float pos_x,  float pos_y,  float pos_z,
 	mUp		= tVector3(up_x,   up_y,   up_z  ); // set the up vector	
 }
 
+void CCamera::Position_Camera(float pos_x,  float pos_y,  float pos_z,
+							  float view_x, float view_y, float view_z,
+							  float up_x,   float up_y,   float up_z, float speed)
+{
+	tVector3 vVector = mView - mPos;	// Get the view vector
+
+	mPos	= tVector3(pos_x,  pos_y,  pos_z ); // set position
+	mView.z = (float)(mPos.z + sin(speed)*vVector.x + cos(speed)*vVector.z);
+	mView.x = (float)(mPos.x + cos(speed)*vVector.x - sin(speed)*vVector.z);
+	mView.y=view_y;
+	mUp		= tVector3(up_x,   up_y,   up_z  ); // set the up vector	
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //										THE CCAMERA MOVE CAMERA

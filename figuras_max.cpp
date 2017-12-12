@@ -1,35 +1,73 @@
 #include <math.h>
 const double PI = 3.1415926535897;
+void light (void) {
+    GLfloat whiteSpecularMaterial[] = {1.0, 1.0, 1.0}; //set the material to white
+GLfloat greenEmissiveMaterial[] = {0.0, 1.0, 0.0}; //set the material to green
+GLfloat whiteSpecularLight[] = {1.0, 1.0, 1.0}; //set the light specular to white
+GLfloat blackAmbientLight[] = {0.0, 0.0, 0.0}; //set the light ambient to black
+GLfloat whiteDiffuseLight[] = {1.0, 1.0, 1.0}; //set the diffuse light to white
+    glLightfv(GL_LIGHT0, GL_SPECULAR, whiteSpecularLight);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, blackAmbientLight);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteDiffuseLight);
+}
+
+void  producto(float* v1,float* v2 ){
+    float x,y,z;
+
+    x=v1[1]*v2[2]-v2[1]*v1[2];
+    y=v1[0]*v2[2]-v2[0]*v1[2];
+    z=v1[0]*v2[1]-v2[0]*v1[1];
+    glNormal3f(x,y,z);
+}
+
+float* resta(float v10,float v11,float v12,float v20,float v21,float v22){
+    float * sal;
+    float n;
+    sal=(float *)malloc(3*sizeof(float));
+    n=((v20-v10)*(v20-v10))+((v21-v11)*(v21-v11))+((v22-v12)*(v22-v12));
+    n=sqrt(n);
+    sal[0]=(v20-v10)/n;
+    sal[1]=(v21-v11)/n;
+    sal[2]=(v22-v12)/n;
+    return sal;
+}
 
 void ficha(GLuint textura){
     int resolucion=20;
     float radio=2,alto=0.5,theta=2*PI/resolucion;
+    float auxx1,auxy1,auxz1;
+    float auxx2,auxy2,auxz2;
     // glDisable(GL_LIGHTING);
     glBindTexture(GL_TEXTURE_2D, textura);
     for (int i=0;i<resolucion;i++){
+        auxx1=cos(i*theta);
+        auxz1=sin(i*theta);
+        auxx2=cos((i+1)*theta);
+        auxz2=sin((i+1)*theta);
         glPushMatrix();
             glTranslatef(0,alto/2,0);
             glBegin(GL_TRIANGLES);
-                glNormal3f(0,1,0);
+                producto(resta(0,0,0,radio*auxx1,0,radio*auxz1),resta(radio*auxx1,0,radio*auxz1,radio*auxx2,0,radio*auxz2));
                 glTexCoord2f(0.5,0.5); glVertex3f(0,0,0);
-                glTexCoord2f(cos(i*theta)/2+0.5,0.5+sin(i*theta)/2); glVertex3f(radio*cos(i*theta),0,radio*sin(i*theta));
-                glTexCoord2f(cos((i+1)*theta)/2+0.5,sin((i+1)*theta)/2+0.5); glVertex3f(radio*cos((i+1)*theta),0,radio*sin((i+1)*theta));
+                glTexCoord2f(auxx1/2+0.5,0.5+auxz1/2); glVertex3f(radio*auxx1,0,radio*auxz1);
+                glTexCoord2f(auxx2/2+0.5,auxz2/2+0.5); glVertex3f(radio*auxx2,0,radio*auxz2);
             glEnd();
         glPopMatrix();
         glPushMatrix();
             glTranslatef(0,-alto/2,0);
             glBegin(GL_TRIANGLES);
-                glNormal3f(0,-1,0);
+                producto(resta(0,0,0,radio*auxx1,0,radio*auxz1),resta(radio*auxx1,0,radio*auxz1,radio*auxx2,0,radio*auxz2));
                 glTexCoord2f(0.5,0.5); glVertex3f(0,0,0);
-                glTexCoord2f(cos(i*theta)/2+0.5,0.5+sin(i*theta)/2); glVertex3f(radio*cos(i*theta),0,radio*sin(i*theta));
-                glTexCoord2f(cos((i+1)*theta)/2+0.5,sin((i+1)*theta)/2+0.5); glVertex3f(radio*cos((i+1)*theta),0,radio*sin((i+1)*theta));
+                glTexCoord2f(auxx1/2+0.5,0.5+auxz1/2); glVertex3f(radio*auxx1,0,radio*auxz1);
+                glTexCoord2f(auxx2/2+0.5,auxz2/2+0.5); glVertex3f(radio*auxx2,0,radio*auxz2);
             glEnd();
         glPopMatrix();
         glBegin(GL_POLYGON);
-            glTexCoord2f(cos(i*theta),1); glVertex3f(radio*cos(i*theta),alto/2,radio*sin(i*theta));
-            glTexCoord2f(cos(i*theta),0); glVertex3f(radio*cos(i*theta),-alto/2,radio*sin(i*theta));
-            glTexCoord2f(cos((i+1)*theta),0); glVertex3f(radio*cos((i+1)*theta),-alto/2,radio*sin((i+1)*theta));
-            glTexCoord2f(cos((i+1)*theta),1); glVertex3f(radio*cos((i+1)*theta),alto/2,radio*sin((i+1)*theta));
+            producto(resta(radio*auxx1,alto/2,radio*auxz1,radio*auxx1,-alto/2,radio*auxz1),resta(radio*auxx1,-alto/2,radio*auxz1,radio*auxx2,-alto/2,radio*auxz2));
+            glTexCoord2f(auxx1,1); glVertex3f(radio*auxx1,alto/2,radio*auxz1);
+            glTexCoord2f(auxx1,0); glVertex3f(radio*auxx1,-alto/2,radio*auxz1);
+            glTexCoord2f(auxx2,0); glVertex3f(radio*auxx2,-alto/2,radio*auxz2);
+            glTexCoord2f(auxx2,1); glVertex3f(radio*auxx2,alto/2,radio*auxz2);
         glEnd();
 
     }
@@ -42,13 +80,14 @@ void paredMadera(float x,float y,float z,float veces,GLuint textura){
     float largo=x/2;
     float alto=y/2;
     float ancho=z/2;
+
     // glDisable(GL_LIGHTING);
 	glPushMatrix();
 		//pared interna
 		glBindTexture(GL_TEXTURE_2D, textura);
-		glColor3f(1, 1, 1);
 		glBegin(GL_POLYGON);
-			// glNormal3f(1, 0, 0);
+            //pared frontal
+            producto(resta(-largo , -alto , ancho,largo , -alto , ancho),resta(largo , -alto , ancho,largo , alto , ancho));
 			glTexCoord2f(0, 0);	glVertex3f(-largo , -alto , ancho );
 			glTexCoord2f(0, 1*largo*veces); glVertex3f(largo , -alto , ancho );
 			glTexCoord2f(1 * alto * veces, 1 * largo * veces); glVertex3f(largo , alto , ancho );
@@ -56,7 +95,8 @@ void paredMadera(float x,float y,float z,float veces,GLuint textura){
 		glEnd();
 		glBindTexture(GL_TEXTURE_2D, textura);
 		glBegin(GL_POLYGON);
-			// glNormal3f(-1, 0, 0);
+            //pared trasera
+            producto(resta(-largo ,-alto , -ancho,largo , -alto , -ancho),resta(largo , -alto , -ancho,largo , alto , -ancho));
 			glTexCoord2f(0, 0);	glVertex3f(-largo ,-alto , -ancho );
 			glTexCoord2f(0, 1 * largo * veces); glVertex3f(largo , -alto , -ancho );
 			glTexCoord2f(1*alto*veces, 1 * largo * veces); glVertex3f(largo , alto , -ancho );
@@ -65,6 +105,8 @@ void paredMadera(float x,float y,float z,float veces,GLuint textura){
 		glBindTexture(GL_TEXTURE_2D, textura);
 		glBegin(GL_POLYGON);
     		// glNormal3f(-1, 0, 0);
+            //pared izquierda
+            producto(resta(-largo , -alto , -ancho,-largo , -alto , ancho),resta(-largo , -alto , ancho,-largo , alto , ancho));
     		glTexCoord2f(0, 0); glVertex3f(-largo , -alto , -ancho );
     		glTexCoord2f(0, 1 * largo * veces);	glVertex3f(-largo , -alto , ancho );
     		glTexCoord2f(1 * alto*veces, 1 * largo * veces);	glVertex3f(-largo , alto , ancho );
@@ -72,6 +114,8 @@ void paredMadera(float x,float y,float z,float veces,GLuint textura){
 		glEnd();
 		glBegin(GL_POLYGON);
 		// glNormal3f(-1, 0, 0);
+            //pared derecha
+            producto(resta(largo , -alto , -ancho,largo , -alto , ancho),resta(largo , -alto , ancho,largo , alto , ancho));
 			glTexCoord2f(0, 0); glVertex3f(largo , -alto , -ancho );
 			glTexCoord2f(0, 1 * largo * veces); glVertex3f(largo , -alto , ancho );
 			glTexCoord2f(1 * alto*veces, 1 * largo * veces); glVertex3f(largo , alto , ancho );
@@ -79,6 +123,8 @@ void paredMadera(float x,float y,float z,float veces,GLuint textura){
 		glEnd();
 		glBegin(GL_POLYGON);
             // glNormal3f(0,1,0);
+            //pared superior
+            producto(resta(-largo , alto , ancho,largo , alto , ancho),resta(-largo , alto , ancho,largo , alto , ancho));
 			glTexCoord2f(0,0); glVertex3f(-largo , alto , -ancho );
 			glTexCoord2f(0, 1 * largo * veces); glVertex3f(-largo , alto , ancho );
 			glTexCoord2f(1 * alto*veces, 1 * largo * veces); glVertex3f(largo , alto , ancho );
@@ -86,6 +132,7 @@ void paredMadera(float x,float y,float z,float veces,GLuint textura){
 		glEnd();
 		glBegin(GL_POLYGON);
             // glNormal3f(0,1,0);
+            producto(resta(-largo , -alto , -ancho,-largo , -alto , ancho),resta(-largo , -alto , ancho,largo , -alto , ancho));
 			glTexCoord2f(0,0); glVertex3f(-largo , -alto , -ancho );
 			glTexCoord2f(0, 1 * largo * veces); glVertex3f(-largo , -alto , ancho );
 			glTexCoord2f(1 * alto*veces, 1 * largo * veces); glVertex3f(largo , -alto , ancho );
@@ -101,7 +148,7 @@ void plano(float x,float z, GLuint textura){
     // glDisable(GL_LIGHTING);
     glBindTexture(GL_TEXTURE_2D, textura);
     glBegin(GL_POLYGON);
-        glNormal3f(0, 1, 0);
+        producto(resta(-largo , 0 , -ancho ,largo , 0 , -ancho),resta(largo , 0 , -ancho,largo , 0 , ancho));
         glTexCoord2f(0, 0);	glVertex3f(-largo , 0 , -ancho );
         glTexCoord2f(0, 1); glVertex3f(largo , 0 , -ancho );
         glTexCoord2f(1 ,1); glVertex3f(largo , 0 , ancho );
@@ -116,7 +163,7 @@ void bisagra1(float x,float z, GLuint textura){
     // glDisable(GL_LIGHTING);
     glBindTexture(GL_TEXTURE_2D, textura);
     glBegin(GL_POLYGON);
-        glNormal3f(0, 1, 0);
+        producto(resta(-largo , 0 , -ancho,largo , 0 , -ancho),resta(largo , 0 , -ancho,largo , 0 , ancho));
         glTexCoord2f(0, 1);	glVertex3f(-largo , 0 , -ancho );
         glTexCoord2f(0,0 ); glVertex3f(largo , 0 , -ancho );
         glTexCoord2f(0.4 ,0); glVertex3f(largo , 0 , ancho );
@@ -136,7 +183,7 @@ void triangulo(float base,float altura,GLuint textura,int tipo){
     else
         aumento=0.5;
     glBegin(GL_TRIANGLES);
-        glNormal3f(0, 1, 0);
+        producto(resta(0,0,0,0 , 0 , base),resta(0 , 0 , base,altura , 0 , base/2));
         glTexCoord2f(0+aumento, 0);	glVertex3f(0, 0 , 0 );
         glTexCoord2f(0.5+aumento, 0); glVertex3f(0 , 0 , base);
         glTexCoord2f(0.25+aumento ,1); glVertex3f(altura , 0 , base/2 );
@@ -217,7 +264,7 @@ void cilindroBisagra(int resolucion,float radio,float alto,GLuint oro,GLuint bis
             glTranslatef(0,alto/2,0);
             glBindTexture(GL_TEXTURE_2D, oro);
             glBegin(GL_TRIANGLES);
-                glNormal3f(0,1,0);
+                producto(resta(0,0,0,radio*cos(i*theta),0,radio*sin(i*theta)),resta(radio*cos(i*theta),0,radio*sin(i*theta),radio*cos((i+1)*theta),0,radio*sin((i+1)*theta)));
                 glTexCoord2f(0.5,0.5); glVertex3f(0,0,0);
                 glTexCoord2f(cos(i*theta)/2+0.5,0.5+sin(i*theta)/2); glVertex3f(radio*cos(i*theta),0,radio*sin(i*theta));
                 glTexCoord2f(cos((i+1)*theta)/2+0.5,sin((i+1)*theta)/2+0.5); glVertex3f(radio*cos((i+1)*theta),0,radio*sin((i+1)*theta));
@@ -227,7 +274,7 @@ void cilindroBisagra(int resolucion,float radio,float alto,GLuint oro,GLuint bis
             glTranslatef(0,-alto/2,0);
             glBindTexture(GL_TEXTURE_2D, oro);
             glBegin(GL_TRIANGLES);
-                glNormal3f(0,-1,0);
+                producto(resta(0,0,0,radio*cos(i*theta),0,radio*sin(i*theta)),resta(radio*cos(i*theta),0,radio*sin(i*theta),radio*cos((i+1)*theta),0,radio*sin((i+1)*theta)));
                 glTexCoord2f(0.5,0.5); glVertex3f(0,0,0);
                 glTexCoord2f(cos(i*theta)/2+0.5,0.5+sin(i*theta)/2); glVertex3f(radio*cos(i*theta),0,radio*sin(i*theta));
                 glTexCoord2f(cos((i+1)*theta)/2+0.5,sin((i+1)*theta)/2+0.5); glVertex3f(radio*cos((i+1)*theta),0,radio*sin((i+1)*theta));
@@ -235,6 +282,7 @@ void cilindroBisagra(int resolucion,float radio,float alto,GLuint oro,GLuint bis
         glPopMatrix();
         glBindTexture(GL_TEXTURE_2D, bisagraT);
         glBegin(GL_POLYGON);
+            producto(resta(radio*cos(i*theta),alto/2,radio*sin(i*theta),radio*cos(i*theta),-alto/2,radio*sin(i*theta)),resta(radio*cos(i*theta),-alto/2,radio*sin(i*theta),radio*cos((i+1)*theta),-alto/2,radio*sin((i+1)*theta)));
             glTexCoord2f(0.155*cos(i*theta)+0.425,1); glVertex3f(radio*cos(i*theta),alto/2,radio*sin(i*theta));
             glTexCoord2f(0.155*cos(i*theta)+0.425,0); glVertex3f(radio*cos(i*theta),-alto/2,radio*sin(i*theta));
             glTexCoord2f(0.155*cos((i+1)*theta)+0.425,0); glVertex3f(radio*cos((i+1)*theta),-alto/2,radio*sin((i+1)*theta));
@@ -292,49 +340,41 @@ void tableroCompleto(float anguloActual,GLuint bisagra,GLuint tapete,GLuint oro,
 void cubo(GLuint textura,float x, float z){
     float a=1; //arista
     //rotacion aleatoria en x y en z
-    // GLfloat whiteSpecularMaterial[] = {1.0, 1.0, 1.0};
-    // GLfloat whiteSpecularLight[] = {1.0, 1.0, 1.0};
-    // GLfloat whiteDiffuseLight[] = {1.0, 1.0, 1.0};
-    // GLfloat blackAmbientLight[] = {0.0, 0.0, 0.0};
-    // GLfloat mShininess[] = {128};
-    // glDisable(GL_LIGHTING);
-    // glEnable (GL_LIGHT0);
-    // glLightfv(GL_LIGHT0, GL_SPECULAR, whiteSpecularLight);
-    // glLightfv(GL_LIGHT0, GL_AMBIENT, blackAmbientLight);
-    // glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteDiffuseLight);
-    // glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, whiteSpecularMaterial);
-    // glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mShininess);
-        glPushMatrix();
+    glPushMatrix();
         glRotatef(x,1,0,0);
         glRotatef(z,0,0,1);
         glBindTexture(GL_TEXTURE_2D, textura);
         glBegin(GL_POLYGON);
                 //cara trasera con 2
-                glNormal3f(0,0,-1);
+                // glNormal3f(0,0,-1);
+                producto(resta(-a,-a,-a,-a,a,-a),resta(-a,a,-a,a,a,-a));
                 glTexCoord2f(0.33,0.5); glVertex3f(-a,-a,-a);
-                glTexCoord2f(0.66,0.5); glVertex3f(-a,-a,a);
-                glTexCoord2f(0.66,1); glVertex3f(-a,a,a);
-                glTexCoord2f(0.33,1); glVertex3f(-a,a,-a);
+                glTexCoord2f(0.66,0.5); glVertex3f(-a,a,-a);
+                glTexCoord2f(0.66,1); glVertex3f(a,a,-a);
+                glTexCoord2f(0.33,1); glVertex3f(a,-a,-a);
         glEnd();
         glBegin(GL_POLYGON);
                 //cara frontral con 5
-                glNormal3f(0,0,1);
-                glTexCoord2f(0.33,0); glVertex3f(a,-a,-a);
-                glTexCoord2f(0.33,0.5); glVertex3f(a,a,-a);
+                // glNormal3f(0,0,1);
+                producto(resta(-a,-a,a,-a,a,a),resta(-a,a,a,a,a,a));
+                glTexCoord2f(0.33,0); glVertex3f(-a,-a,a);
+                glTexCoord2f(0.33,0.5); glVertex3f(-a,a,a);
                 glTexCoord2f(0.66,0.5); glVertex3f(a,a,a);
                 glTexCoord2f(0.66,0); glVertex3f(a,-a,a);
             glEnd();
             glBegin(GL_POLYGON);
                 //cada inferior con 4
-                glNormal3f(0,-1,0);
+                // glNormal3f(0,-1,0);
+                producto(resta(-a,-a,-a,a,-a,-a),resta(a,-a,-a,a,-a,a));
                 glTexCoord2f(0,0); glVertex3f(-a,-a,-a);
                 glTexCoord2f(0,0.5); glVertex3f(a,-a,-a);
                 glTexCoord2f(0.33,0.5); glVertex3f(a,-a,a);
                 glTexCoord2f(0.33,0); glVertex3f(-a,-a,a);
             glEnd();
             glBegin(GL_POLYGON);
-                //cara frontral con 3
-                glNormal3f(0,1,0);
+                //cara superior con 3
+                // glNormal3f(0,1,0);
+                producto(resta(-a,a,-a,a,a,-a),resta(a,a,-a,a,a,a));
                 glTexCoord2f(0.66,0.5); glVertex3f(-a,a,-a);
                 glTexCoord2f(0.66,1); glVertex3f(a,a,-a);
                 glTexCoord2f(1,1); glVertex3f(a,a,a);
@@ -342,19 +382,21 @@ void cubo(GLuint textura,float x, float z){
             glEnd();
             glBegin(GL_POLYGON);
                 //cara izquierda con 1
-                glNormal3f(-1,0,0);
+                // glNormal3f(-1,0,0);
+                producto(resta(-a,-a,-a,-a,-a,a),resta(-a,-a,a,-a,a,a));
                 glTexCoord2f(0,0.5);  glVertex3f(-a,-a,-a);
-                glTexCoord2f(0,1);    glVertex3f(a,-a,-a);
-                glTexCoord2f(0.33,1);      glVertex3f(a,a,-a);
+                glTexCoord2f(0,1);    glVertex3f(-a,-a,a);
+                glTexCoord2f(0.33,1);      glVertex3f(-a,a,a);
                 glTexCoord2f(0.33,0.5);    glVertex3f(-a,a,-a);
             glEnd();
             glBegin(GL_POLYGON);
                 //cara izquierda con 6
-                glNormal3f(1,0,0);
-                glTexCoord2f(0.66,0);     glVertex3f(-a,-a,a);
+                // glNormal3f(1,0,0);
+                producto(resta(a,-a,-a,a,-a,a),resta(a,-a,-a,a,a,a));
+                glTexCoord2f(0.66,0);     glVertex3f(a,-a,-a);
                 glTexCoord2f(0.66,0.5);       glVertex3f(a,-a,a);
                 glTexCoord2f(1,0.5);      glVertex3f(a,a,a);
-                glTexCoord2f(1,0);    glVertex3f(-a,a,a);
+                glTexCoord2f(1,0);    glVertex3f(a,a,-a);
         glEnd();
     glPopMatrix();
     // glEnable(GL_LIGHTI   NG);
