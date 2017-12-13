@@ -19,6 +19,7 @@ GLfloat blankMaterial[] = {0.0, 0.0, 0.0}; //set the diffuse light to white
 GLfloat mShininess[] = {128}; //set the shininess of the material
 
 GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+GLfloat light_position2[] = { 1.0, 1.0, 1.0, 0.0 };
 float a0=1;
 float a1=1;
 float a2=1;
@@ -32,12 +33,15 @@ bool specular = false;
 void init (void) {
     glEnable (GL_DEPTH_TEST);
     glEnable (GL_LIGHTING);
+    glEnable (GL_LIGHT1);
     glEnable (GL_LIGHT0);
 }
 
 void cubo(float arista){
 	//trasero
 	float a=arista/2;
+    GLfloat matCuboAmbiental[]={1.0,0.619607843137,0.0};
+    glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,matCuboAmbiental);
 	glBegin(GL_QUADS);
     	//trasera
     	glNormal3f(0,0,-1);
@@ -78,9 +82,9 @@ void cubo(float arista){
     glEnd();
 }
 void light (void) {
-    glLightfv(GL_LIGHT0, GL_SPECULAR, whiteSpecularLight);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, blackAmbientLight);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteDiffuseLight);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, whiteSpecularLight);
+    glLightfv(GL_LIGHT1, GL_AMBIENT, blackAmbientLight);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, whiteDiffuseLight);
 }
 
 void display (void) {
@@ -93,7 +97,8 @@ void display (void) {
     light_position[1]= a1;
     light_position[2]= a2;
     light_position[3]= a3;
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT1, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position2);
     // glRotatef(angle,1,1,1);
     glPushMatrix();
     	glTranslatef(a0,a1,a2);
@@ -167,6 +172,10 @@ void keyboard (unsigned char key, int x, int y) {
 //             glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, blankMaterial);
 //         }
 //     }
+    if (key=='e')
+        glDisable(GL_LIGHT0);
+    if(key=='E')
+        glEnable(GL_LIGHT0);
     if (key=='a')
     	ax+=def;
     if (key=='s')

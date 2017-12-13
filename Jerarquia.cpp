@@ -6,13 +6,10 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include "texture.h"
-#include "figuras.h"
 #include "Camera.h"
 #include "figuras_max.cpp"
 
 #define MAX_FRAMES 20
-
-CFiguras mifigura;
 
 int w = 500, h = 500;
 int frame=0,time,timebase=0;
@@ -22,7 +19,7 @@ int deltaTime = 0;
 CCamera objCamera;	//Create objet Camera
 bool changeCamera=false;
 
-//variables de ficha dummy
+//variables de ficha1 dummy
 float fichaDummyx=2.83,
 	fichaDummyy=4.2,
 	fichaDummyz=0.57,
@@ -31,14 +28,31 @@ float fichaDummyx=2.83,
 	fichaDviewz=-2.43,
 	fichaDryAnterior=0,
 	fichaDry=0;
-
+GLfloat matFichaAzul[]={0.184,0.384,0.850,1.0};//ficha azul
 
 GLfloat g_lookupdown = 92.0f;    // Look Position In The Z-Axis (NEW)
 
-GLfloat Diffuse[]= { 0.5f, 0.5f, 0.5f, 1.0f };				// Diffuse Light Values
-GLfloat Specular[] = { 1.0, 1.0, 1.0, 1.0 };				// Specular Light Values
-GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-GLfloat Position2[]= { 0.0f, 0.0f, -5.0f, 1.0f };			// Light Position
+//variables para las luces
+//para todo el tablero se usara una luz direccional
+GLfloat posLiDir[]={0.0,32.0,0.0,0.0}; //se posiciona en 0,32,0 como fuente direccional
+GLfloat ambLiDir[]={0.5,0,0,1}; //un color amarillesco
+GLfloat espLiDir[]={0.5,0.2,0,1}; //un color medio morado
+GLfloat difLiDir[]={0.5,0.2,0,1};
+//luz posicional 
+GLfloat light1_ambient[] = { 0, 0, 0.2, 1.0 };
+GLfloat light1_diffuse[] = { 0.0, 1, 1.0, 1.0 };
+GLfloat light1_specular[] = { 0.0, 1.0, 1.0, 1.0 };
+GLfloat light1_position[] = { -22.0, 30.0, 1.0, 1.0 };
+GLfloat spot_direction[] = { 0.0, -1.0, 0.0 };
+//luz dos
+GLfloat light_specular2[] = {0.0, 0.5, 1.0}; //set the light specular to white
+GLfloat light_ambient2[] = {0.0, 0.6, 0.0}; //set the light ambient to black
+GLfloat light_diffuse2[] = {0.4, 0.4, 0.4}; //set the diffuse light to white
+GLfloat light_position2[] = { 1.0, 1.0, 1.0, 1.0 };
+// GLfloat Diffuse[]= { 0.5f, 0.5f, 0.5f, 1.0f };				// Diffuse Light Values
+// GLfloat Specular[] = { 1.0, 1.0, 1.0, 1.0 };				// Specular Light Values
+GLfloat light_position[] = {0,12,-13,0 };
+// GLfloat Position2[]= { 0.0f, 0.0f, -5.0f, 1.0f };			// Light Position
 
 //texturas
 CTexture madera;
@@ -58,6 +72,8 @@ bool tiro=false;
 typedef struct _frame {
 	float angulo;
 } FRAME ;
+int totalK;
+int indiceK;
 FRAME keyFrame [MAX_FRAMES];
 float anguloActual=180;
 //para el cubo
@@ -75,45 +91,74 @@ float rAxAux2=0;
 float rAzAux2=0;
 
 //variales para las FICHAS
+// int posiciones[24][5]={
+// {1,1,1,1,1}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{2,2,2,0,0}
+// ,{0,0,0,0,0}
+// //el otro lado tablero 1
+// ,{2,2,2,2,2}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{1,1,1,0,0}
+// ,{0,0,0,0,0}
+// //tablero 2
+// ,{2,2,2,2,2}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{1,1,0,0,0}
+// //lado 2 tablero 2
+// ,{1,1,1,1,1}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{0,0,0,0,0}
+// ,{2,2,0,0,0}};
+
+//punto 2
 int posiciones[24][5]={
-{1,1,1,1,1}
-,{0,0,0,0,0}
-,{0,0,0,0,0}
-,{0,0,0,0,0}
-,{2,2,2,0,0}
-,{0,0,0,0,0}
-//el otro lado tablero 1
-,{2,2,2,2,2}
-,{0,0,0,0,0}
-,{0,0,0,0,0}
-,{0,0,0,0,0}
-,{1,1,1,0,0}
-,{0,0,0,0,0}
-//tablero 2
-,{2,2,2,2,2}
+
+//tablero 2 	
+{0,0,0,0,0}
 ,{0,0,0,0,0}
 ,{0,0,0,0,0}
 ,{0,0,0,0,0}
 ,{0,0,0,0,0}
-,{1,1,0,0,0}
+,{0,0,0,0,0}
 //lado 2 tablero 2
-,{1,1,1,1,1}
 ,{0,0,0,0,0}
 ,{0,0,0,0,0}
 ,{0,0,0,0,0}
 ,{0,0,0,0,0}
-,{2,2,0,0,0}};
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{1,1,1,1,0}
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{2,2,2,2,0}
+//el otro lado tablero 1
+,{2,2,2,2,0}
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{0,0,0,0,0}
+,{1,1,1,1,0}};
+
 
 //variables auxiliares
-float ax=4.229999;
-float ay= 31.900013;
-float az=-11.579988;
-float dir=-1;
+
+float ax=0;
+float ay= 8.9;
+float az=0;
 
 
-//figuras
-CFiguras sky;
-//variables de animacion
 void InitGL ( GLvoid )     // Inicializamos parametros
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Negro de fondo
@@ -123,7 +168,8 @@ void InitGL ( GLvoid )     // Inicializamos parametros
 	glShadeModel (GL_SMOOTH);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	light();
+	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHT2);
 
 	glClearDepth(1.0f);									// Configuramos Depth Buffer
 	glEnable(GL_DEPTH_TEST);							// Habilitamos Depth Testing
@@ -172,19 +218,10 @@ void InitGL ( GLvoid )     // Inicializamos parametros
 
 	keyFrame[0].angulo=0.0;
 	keyFrame[1].angulo=180.0;
-
+	totalK=2;
 	//configuracion inicial del tablero
 
-	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat mat_shininess[] = { 50.0 };
-
-    glClearColor (0.0, 0.0, 0.0, 0.0);
-    glShadeModel (GL_SMOOTH);
-
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-
-	;
+   
 }
 
 
@@ -196,12 +233,29 @@ void display ( void )   // Creamos la funcion donde se dibuja
 
 
 	glPushMatrix();
-		light_position[0] = ax;
-		light_position[1] = ay;
-		light_position[2] = az;
-		light_position[3] = dir;
-		glLightfv(GL_LIGHTING, GL_POSITION, light_position);
 		glRotatef(g_lookupdown,1.0f,0,0);
+		light_position2[0] = ax;
+		light_position2[1] = ay;
+		light_position2[2] = az;
+		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+		glLightfv(GL_LIGHT0,GL_AMBIENT,ambLiDir);
+		glLightfv(GL_LIGHT0,GL_DIFFUSE,difLiDir);
+		glLightfv(GL_LIGHT0,GL_SPECULAR,espLiDir);
+
+		glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
+		glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
+		glLightfv(GL_LIGHT1, GL_POSITION, light1_position);
+		glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 22.0);
+		glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction);
+	
+		glLightfv(GL_LIGHT2, GL_AMBIENT, light_ambient2);
+		glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse2);
+		glLightfv(GL_LIGHT2, GL_SPECULAR, light_specular2);
+		glLightfv(GL_LIGHT2, GL_POSITION, light_position2);
+		glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, 10.0);
+		glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, spot_direction);
+
 
 
 		if (!changeCamera)
@@ -227,13 +281,17 @@ void display ( void )   // Creamos la funcion donde se dibuja
 				objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
 
 		glPushMatrix();
-			glPushMatrix(); //Creamos cielo
-				glDisable(GL_LIGHTING);
-				glTranslatef(0,60,0);
-				sky.skybox(130.0, 130.0, 130.0,cielo.GLindex);
-				glEnable(GL_LIGHTING);
-				// glColor3f(1.0,1.0,1.0);
+			glPushMatrix();
+				glTranslatef(ax,ay,az);
+				cubo(1);
 			glPopMatrix();
+			// glPushMatrix(); //Creamos cielo
+			// 	glDisable(GL_LIGHT0);
+			// 	glTranslatef(0,60,0);
+			// 	sky.skybox(130.0, 130.0, 130.0,cielo.GLindex);
+			// 	glEnable(GL_LIGHT0);
+			// 	// glColor3f(1.0,1.0,1.0);
+			// glPopMatrix();
 			glPushMatrix();
 				tableroCompleto(anguloActual,bisagra.GLindex,tapete.GLindex,oro.GLindex,triangulos.GLindex,madera.GLindex,posiciones,azul.GLindex,naranja.GLindex);
 				glTranslatef(27,2,0);
@@ -246,7 +304,7 @@ void display ( void )   // Creamos la funcion donde se dibuja
 				glTranslatef(fichaDummyx,fichaDummyy-2.2,fichaDummyz);
 				// glRotatef(fichaDrx,1,0,0);
 				// glRotatef(fichaDrz,0,0,1);
-				ficha(azul.GLindex);
+				ficha(matFichaAzul);
 			glPopMatrix();
 		glPopMatrix();
 	glPopMatrix();
@@ -267,15 +325,25 @@ float interpolacionCubo(float origen,float destino,float tiempo){
 void animacion()
 {
 	if (play){
-		if (cerrar){
-			anguloActual-=interpolacion(keyFrame[0].angulo,keyFrame[1].angulo);
-			if (anguloActual>180)
-				play=false;
+		if (abrir){
+			if (anguloActual<keyFrame[0].angulo)
+				indiceK--;
+				if (indiceK==0){
+					abrir=false;
+					play=false;
+				}
+			else
+				anguloActual-=interpolacion(keyFrame[indiceK].angulo,keyFrame[indiceK-1].angulo);
 		}
-		else if (abrir){
-			anguloActual-=interpolacion(keyFrame[1].angulo,keyFrame[0].angulo);
-			if (anguloActual<0)
-				play=false;
+		else if (cerrar){
+			if (anguloActual>=keyFrame[1].angulo)
+				indiceK++;
+				if (indiceK==totalK-1){
+					play=false;
+					cerrar=false;
+				}
+			else
+				anguloActual-=interpolacion(keyFrame[indiceK].angulo,keyFrame[indiceK+1].angulo);
 		}
 	}
 	if (tiro){
@@ -368,14 +436,18 @@ void keyboard ( unsigned char key, int x, int y )  // Create Keyboard Function
 			}
 			break;
 		case 'c':
+		case 'C':
 			play=true;
 			cerrar=true;
 			abrir=false;
+			indiceK=0;
 			break;
 		case 'o':
+		case 'O':
 			play=true;
 			cerrar=false;
 			abrir=true;
+			indiceK=totalK-1;
 			break;
 		case 't'://tirar	
 		case 'T':
@@ -406,37 +478,30 @@ void keyboard ( unsigned char key, int x, int y )  // Create Keyboard Function
 				g_lookupdown=92;
 			}
 			break;
-		case 'p':
-			// printf("%f %f %f\n", objCamera.mPos.x,  objCamera.mPos.y,  objCamera.mPos.z);
-			// printf("%f %f %f\n", 	objCamera.mView.x, objCamera.mView.y, objCamera.mView.z);
-			// printf("%f %f %f\n", objCamera.mUp.x,   objCamera.mUp.y,   objCamera.mUp.z);
-			printf("%f\n",fichaDry );
+		case 'g':
+		case 'G':
+			ax-=1;
 			break;
-		case 'b':
-			ax+=0.1;
-			break;
-		case 'B':
-			ax-=0.1;
+		case 'j':
+		case 'J':
+			ax+=1;
 			break;
 		case 'n':
-			ay+=0.1;
-			break;
 		case 'N':
-			ay-=0.1;
+			ay-=1;
 			break;
 		case 'm':
-			az+=0.1;
-			break;
 		case 'M':
-			az-=0.1;
+			ay+=1;
 			break;
-		// case 'l':
-		// 	dir-=0.5;
-		// 	break;
-		// case 'L':
-		// 	dir+=0.5;
-		// 	break;
-
+		case 'y':
+		case 'Y':
+			az-=1;
+			break;
+		case 'h':
+		case 'H':
+			az+=1;
+			break;
 		case 27:        // Cuando Esc es presionado...
 			exit ( 0 );   // Salimos del programa
 			break;
@@ -499,7 +564,7 @@ int main ( int argc, char** argv )   // Main Function
   glutInitDisplayMode (GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH); // Display Mode (Clores RGB y alpha | Buffer Doble )
   glutInitWindowSize  (2000, 2000);	// Tama�o de la Ventana
   glutInitWindowPosition (0, 0);	//Posicion de la Ventana
-  glutCreateWindow    ("Jerarquia"); // Nombre de la Ventana
+  glutCreateWindow    ("Proyecto Extraordinario"); // Nombre de la Ventana
   //glutFullScreen     ( );         // Full Screen
   InitGL ();						// Parametros iniciales de la aplicacion
   glutDisplayFunc     ( display );  //Indicamos a Glut funci�n de dibujo
